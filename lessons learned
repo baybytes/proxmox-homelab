@@ -1,0 +1,97 @@
+## Lessons Learned
+
+Throughout the initial setup of the homelab infrastructure, several practical insights and best practices emerged.
+
+### Validate storage devices before making changes
+
+Before partitioning or formatting any disk, always verify the target device using tools such as:
+
+* `lsblk`
+* `blkid`
+* `smartctl`
+
+This reduces the risk of accidental data loss and provides an opportunity to assess disk health before migration.
+
+---
+
+### Prefer UUIDs over device names
+
+Persistent mounts should use filesystem UUIDs in `/etc/fstab` rather than device names like `/dev/sdb1`.
+
+Device names may change after reboots or when additional USB drives are connected, while UUIDs remain stable.
+
+---
+
+### Plan storage migrations conservatively
+
+Before converting the 4 TB WD Elements drive from HFS+ to ext4, all data was copied to a temporary backup location.
+
+Only after verifying the copied data was the original disk reformatted and restored.
+
+This approach significantly reduces migration risk.
+
+---
+
+### Understand unprivileged LXC permission mapping
+
+Bind-mounted directories are affected by UID/GID mapping.
+
+Changing permissions inside the container is often insufficient because ownership is controlled by the Proxmox host.
+
+Correct ownership must therefore be applied on the host using the mapped UID/GID values.
+
+---
+
+### Separate infrastructure from application data
+
+The hypervisor manages storage, while containers consume storage through bind mounts.
+
+This keeps services portable and allows containers to be recreated without losing persistent application data.
+
+Example:
+
+```text
+Host:
+/mnt/data/Services/Joplin
+
+↓
+
+LXC:
+/mnt/joplin
+```
+
+---
+
+### Keep application data outside container root filesystems
+
+Persistent data should not reside inside the container disk itself.
+
+Instead, dedicated storage locations on the host make backups, migrations and disaster recovery significantly easier.
+
+---
+
+### Troubleshooting is part of the deployment process
+
+Several issues occurred during deployment, including:
+
+* SMB permission problems
+* Docker volume ownership
+* PostgreSQL container startup failures
+* YAML configuration errors
+* Initial synchronization behaviour in Joplin
+
+Each issue was resolved by identifying the root cause rather than applying temporary workarounds.
+
+---
+
+### Build infrastructure before deploying applications
+
+A stable storage layout, backup strategy and networking configuration simplify the deployment of higher-level services.
+
+Building the underlying platform first reduced complexity during later service installation.
+
+---
+
+### Documentation should evolve with the infrastructure
+
+Recording configuration decisions, encountered issues and their resolutions creates a reproducible environment and serves as valuable reference material for future maintenance or migration projects.
