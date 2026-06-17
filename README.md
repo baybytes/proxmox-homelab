@@ -1,38 +1,126 @@
-# proxmox-homelab
+# Proxmox Homelab
 
-Persönliches Homelab auf Basis eines HP Thin Clients mit Fokus auf:
+A self-hosted infrastructure project built on **Proxmox VE** with a focus on Linux system administration, virtualization, storage management, networking and containerized services.
 
-- Virtualisierung mit Proxmox VE
-- Debian LXC Container
-- Docker Workloads
-- zentralem Fileserver
-- Self-Hosted Services
-- Backup-Strategien
-- Systemadministration
+The project serves both as a personal production environment and as a practical learning platform for modern infrastructure technologies.
 
-## Infrastruktur
+---
 
-- Proxmox VE
-- Pi-hole
-- Samba Fileserver
-- Joplin Server
-- PostgreSQL
-- Docker
+## Objectives
 
-## Storage
+The homelab was designed to:
 
-- 4 TB WD Elements (ext4)
-- 2 TB Seagate Backup
-- SSD für Proxmox Host
+* Build practical experience with Linux and Proxmox VE.
+* Deploy lightweight services using unprivileged LXC containers.
+* Centralize personal data and self-hosted applications.
+* Implement a maintainable storage and backup architecture.
+* Gain hands-on experience with Docker and PostgreSQL.
+* Replace third-party cloud services with self-hosted alternatives.
 
-## Features
+---
 
-- zentrale Dateifreigaben
-- Multi-Device Joplin Synchronisation
-- Backup-Konzept
-- LXC Containerisierung
-- Docker Compose Deployments
+## Technology Stack
 
-## Dokumentation
+| Category          | Technology             |
+| ----------------- | ---------------------- |
+| Hypervisor        | Proxmox VE             |
+| Virtualization    | Linux Containers (LXC) |
+| Container Runtime | Docker                 |
+| Database          | PostgreSQL             |
+| DNS               | Pi-hole                |
+| File Sharing      | Samba (SMB)            |
+| Notes             | Joplin Server          |
+| Filesystem        | ext4                   |
+| Operating System  | Debian                 |
 
-Siehe `docs/`.
+---
+
+## Current Infrastructure
+
+| Service       | Description                      |
+| ------------- | -------------------------------- |
+| Pi-hole       | Network-wide DNS filtering       |
+| Fileserver    | Central SMB file storage         |
+| Joplin Server | Self-hosted note synchronization |
+| PostgreSQL    | Backend database for Joplin      |
+
+---
+
+## Storage Architecture
+
+```text
+                 Proxmox Host
+                      │
+        ┌─────────────┴─────────────┐
+        │                           │
+   Internal SSD                External Storage
+        │                           │
+   Proxmox + LXC                /mnt/data
+                                    │
+        ┌───────────────────────────┼──────────────────────────┐
+        │            │             │             │             │
+     Archive     Documents      Photos       Services      Music
+```
+
+Persistent application data is stored outside container filesystems using Proxmox bind mounts, simplifying backups, migrations and disaster recovery.
+
+---
+
+## Implemented Features
+
+* ✅ Proxmox VE virtualization platform
+* ✅ Unprivileged Debian LXC containers
+* ✅ Centralized SMB fileserver
+* ✅ Self-hosted Joplin Server
+* ✅ Docker Compose deployments
+* ✅ PostgreSQL integration
+* ✅ ext4 storage migration
+* ✅ Multi-device synchronization
+* ✅ Cross-platform SMB compatibility (macOS, Windows, iOS)
+* ✅ Backup-oriented storage design
+
+---
+
+## Documentation
+
+Detailed project documentation is available in the `main/` directory.
+
+| Document                     | Description                  |
+| ---------------------------- | ---------------------------- |
+| `01-proxmox-setup.md`        | Initial Proxmox deployment   |
+| `02-storage-architecture.md` | Storage layout and migration |
+| `03-backup-strategy.md`      | Backup philosophy            |
+| `04-samba-fileserver.md`     | SMB fileserver configuration |
+| `05-joplin-server.md`        | Joplin Server deployment     |
+| `06-pihole-dns-server.md`    | DNS infrastructure           |
+| `00-homelab-architecture.md` | Overall system architecture  |
+
+---
+
+## Future Roadmap
+
+Planned additions include:
+
+* Home Assistant
+* Paperless-ngx
+* Immich
+* Automated backup workflows
+* Remote access via VPN
+* Infrastructure monitoring
+
+---
+
+## Learning Outcomes
+
+This project demonstrates practical experience with:
+
+* Linux system administration
+* Proxmox virtualization
+* LXC container management
+* Docker and Docker Compose
+* Storage planning and filesystem migration
+* Samba administration
+* PostgreSQL deployment
+* Backup strategy design
+* Network services
+* Self-hosted infrastructure
