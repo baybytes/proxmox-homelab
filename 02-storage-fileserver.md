@@ -1,167 +1,80 @@
-````markdown
 # 02 - Storage Architecture & Data Migration
 
 ## Overview
 
-This document describes the storage architecture used in the homelab and the migration process from legacy filesystems to a Linux-native ext4 storage layout.
+This document describes the storage architecture implemented in the homelab environment and the migration from legacy filesystems to a Linux-native storage layout.
 
-The objective was to establish a maintainable and reliable storage platform while preserving existing data throughout the migration.
+The primary objective was to establish a reliable, maintainable and scalable storage platform for self-hosted services while preserving all existing data throughout the migration process.
+
+The resulting design separates operating system components from persistent application data and provides a solid foundation for centralized file storage, containerized services and future backup automation.
 
 ---
 
 ## Objectives
 
-- Centralize all personal data on a dedicated storage volume.
-- Replace legacy HFS+ storage with ext4.
-- Preserve existing data during migration.
-- Simplify future backups.
-- Separate operating system and data storage.
+The storage architecture was designed with the following goals in mind:
+
+* Create a centralized location for all personal and service-related data.
+* Replace legacy HFS+ storage with the Linux-native ext4 filesystem.
+* Perform the migration without data loss through staged verification.
+* Keep persistent application data independent from LXC root filesystems.
+* Simplify future maintenance, backups and disaster recovery.
+* Establish a scalable storage layout that can support additional self-hosted services over time.
 
 ---
 
 ## Physical Storage Layout
 
-| Device | Purpose | Filesystem |
-|----------|----------|------------|
-| Internal SSD | Proxmox operating system and LXC root disks | ext4 / LVM |
-| 4 TB External HDD | Primary data storage | ext4 |
-| 2 TB External HDD | Backup and migration storage | ext4 |
-| 500 GB External HDD | Reserved for future backup use | Planned |
+| Device              | Purpose                                        | Filesystem |
+| ------------------- | ---------------------------------------------- | ---------- |
+| Internal SSD        | Proxmox VE operating system and LXC root disks | ext4 / LVM |
+| 4 TB External HDD   | Primary production storage                     | ext4       |
+| 2 TB External HDD   | Backup and temporary migration storage         | ext4       |
+| 500 GB External HDD | Reserved for future backup purposes            | Planned    |
 
 ---
 
-## Final Storage Architecture
+## Storage Architecture
 
 ```text
-Proxmox Host
-│
-├── Internal SSD
-│   ├── Proxmox VE
-│   ├── LXC Containers
-│   └── Docker host storage
-│
-├── /mnt/data
-│   └── Primary Storage
-│       ├── Archive
-│       ├── Documents
-│       ├── Music
-│       ├── Other
-│       ├── Photos
-│       └── Services
-│
-└── /mnt/backup
-    └── Backup Storage
+                 Proxmox Host
+                      │
+        ┌─────────────┴─────────────┐
+        │                           │
+   Internal SSD                External Storage
+        │                           │
+   Proxmox + LXC                /mnt/data
+                                    │
+        ┌───────────────────────────┼──────────────────────────┐
+        │            │             │             │             │
+     Archive     Documents      Photos       Services      Music
 ```
 
----
-
-## Initial Situation
-
-The primary external storage device originally used Apple's HFS+ filesystem.
-
-Although Linux can mount HFS+ volumes, write support is limited and long-term production use is not recommended.
-
-A migration to the native Linux ext4 filesystem was therefore planned.
 
 ---
 
-## Migration Strategy
+## Migration Process
 
-To minimize risk, the migration followed a staged process.
+The primary storage device originally used Apple's HFS+ filesystem.
 
-### Step 1 – Mount the source disk
+To migrate safely to ext4, all data was first copied to temporary backup storage using `rsync`.
 
-The legacy HFS+ disk was mounted in read-only mode.
+Only after verifying the migrated data was the original disk repartitioned, formatted and restored.
+
+Key operations included:
 
 ```bash
-mount -t hfsplus /dev/sdX /mnt/source
+rsync -aHAX --info=progress2 <source> <destination>
+mkfs.ext4
+parted
+mount
 ```
 
----
-
-### Step 2 – Create a temporary backup
-
-All existing data was copied to a dedicated migration disk.
-
-```bash
-rsync -aHAX --info=progress2 /mnt/source/ /mnt/backup/migration/
-```
-
----
-
-### Step 3 – Verify copied data
-
-Verification included:
-
-- directory structure
-- file count
-- storage usage
-- spot checks of random files
-
-Example:
-
-```bash
-du -sh /mnt/backup/migration
-```
-
----
-
-### Step 4 – Repartition the original disk
-
-A new GPT partition table was created.
-
-```bash
-parted /dev/sdX mklabel gpt
-```
-
-The disk was repartitioned as a single Linux partition.
-
----
-
-### Step 5 – Format using ext4
-
-```bash
-mkfs.ext4 -L DATA /dev/sdX1
-```
-
----
-
-### Step 6 – Mount the new filesystem
-
-```bash
-mount /dev/sdX1 /mnt/data
-```
-
-Persistent mounting was configured using filesystem UUIDs in `/etc/fstab`.
-
----
-
-### Step 7 – Restore the data
-
-The previously migrated data was copied back onto the new ext4 filesystem.
-
-```bash
-rsync -aHAX --info=progress2 /mnt/backup/migration/ /mnt/data/
-```
-
----
-
-### Step 8 – Validate the migration
-
-Final verification included:
-
-- total storage usage
-- directory structure
-- file accessibility
-- network share functionality
-
-Only after successful validation was the migration considered complete.
+The migration was verified by comparing directory structures, storage usage and file accessibility before returning the system to production.
 
 ---
 
 ## Directory Structure
-
-The production storage follows a simple top-level organization.
 
 ```text
 /mnt/data
@@ -174,15 +87,11 @@ The production storage follows a simple top-level organization.
 └── Services
 ```
 
-This separation keeps user data and self-hosted application data logically organized.
-
 ---
 
 ## Integration with LXC Containers
 
-Rather than exposing physical disks directly to containers, Proxmox bind mounts are used.
-
-Example:
+Persistent storage is mounted on the Proxmox host and exposed to containers through bind mounts.
 
 ```text
 Host
@@ -191,100 +100,46 @@ Host
 
 ↓
 
-Fileserver LXC
+LXC Container
 
 /mnt/files
 ```
 
-Advantages include:
-
-- simplified administration
-- persistent storage independent of containers
-- easier migrations
-- easier backups
-- improved portability
+This approach separates infrastructure from application data and simplifies future migrations.
 
 ---
 
 ## Backup Strategy
 
-The storage layout was designed to support a 3-2-1 backup philosophy.
+The storage architecture was designed around a 3-2-1 backup philosophy.
 
-### Primary copy
-
-- Production storage
-
-### Secondary copy
-
-- Dedicated backup drive
-
-### Third copy
-
-- Additional offline or manually maintained backup
-
-This approach reduces the risk of accidental data loss while simplifying recovery procedures.
+| Copy | Location |
+|--------|----------|
+| Primary | Production storage |
+| Secondary | Dedicated backup drive |
+| Third | Offline / manual backup |
 
 ---
 
 ## Lessons Learned
 
-### Never migrate without a verified backup
-
-Data should exist in at least two independent locations before repartitioning or formatting any storage device.
-
----
-
-### Verify before deleting
-
-Original media should only be erased after:
-
-- migration completed successfully
-- copied data verified
-- storage integrity confirmed
-- network access tested
-
----
-
-### Prefer native Linux filesystems
-
-Using ext4 instead of HFS+ provides:
-
-- better compatibility
-- improved permissions handling
-- simplified maintenance
-- higher long-term reliability
-
----
-
-### Use UUIDs instead of device names
-
-Filesystem UUIDs remain stable across reboots, whereas device names such as `/dev/sdb1` may change.
-
----
-
-### Separate infrastructure from data
-
-Persistent storage should remain outside container filesystems.
-
-Using bind mounts keeps services portable and allows containers to be recreated without risking application data.
-
----
-
-### Plan storage before deploying services
-
-Establishing a stable storage architecture before deploying applications significantly reduces future maintenance complexity.
+- Always verify backups before formatting disks.
+- Prefer native Linux filesystems for production workloads.
+- Store persistent data outside container root filesystems.
+- Use UUIDs instead of device names for persistent mounts.
+- Plan storage architecture before deploying services.
+- Validate migrations before deleting original data.
 
 ---
 
 ## Current Status
 
-The migration was completed successfully.
+The storage migration has been completed successfully.
 
-The current storage environment provides:
+Current environment:
 
-- ✅ ext4 primary storage
-- ✅ centralized network file access
-- ✅ bind-mounted storage for LXC containers
-- ✅ dedicated backup storage
-- ✅ scalable foundation for future self-hosted services
-````
+- ✅ ext4 production storage
+- ✅ centralized SMB access
+- ✅ bind-mounted LXC storage
+- ✅ backup storage available
+- ✅ prepared for future self-hosted services
