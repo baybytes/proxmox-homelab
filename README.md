@@ -1,14 +1,5 @@
 # proxmox-homelab
 
-docs/
-│   ├── 01-proxmox-setup.md
-│   ├── 02-fileserver.md
-│   ├── 03-storage-migration.md
-│   ├── 04-samba.md
-│   ├── 05-joplin-server.md
-│   ├── 06-backup-strategy.md
-│   └── architecture.md
-
 Persönliches Homelab auf Basis eines HP Thin Clients mit Fokus auf:
 
 - Virtualisierung mit Proxmox VE
