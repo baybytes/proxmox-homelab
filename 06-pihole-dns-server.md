@@ -30,7 +30,7 @@ The deployment was designed with the following goals:
                     Router / ISP
                          │
                   ┌──────────────┐
-                  │   Fritz!Box  │
+                  │   Router     │
                   └──────┬───────┘
                          │
                   DNS Requests
