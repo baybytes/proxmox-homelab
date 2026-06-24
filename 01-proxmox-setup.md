@@ -10,12 +10,12 @@ The goal of this setup is to provide a lightweight, low-power virtualization pla
 
 | Component        | Details                                           |
 | ---------------- | ------------------------------------------------- |
-| Host             | Thin Client                                       |
-| CPU              | AMD Ryzen Embedded R1505G                         |
+| Host             | Low Power Thin Client                             |
+| CPU              | AMD Ryzen Embedded                                |
 | Cores            | 4 logical cores                                   |
-| System Disk      | 256 GB Samsung SSD                                |
-| External Storage | 4 TB WD Elements, 2 TB Seagate HDD, 500 GB WD HDD |
-| Network          | Home LAN via Router                           |
+| System Disk      | Internal SSD                                      |
+| External Storage | Multiple External HDDS                            |
+| Network          | Local LAN via Router                              |
 
 
 ## Hypervisor
