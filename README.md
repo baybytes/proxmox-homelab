@@ -1,21 +1,16 @@
 # Proxmox Homelab
 
-A self-hosted infrastructure project built on **Proxmox VE** with a focus on Linux system administration, virtualization, storage management, networking and containerized services.
-
-The project serves both as a personal production environment and as a practical learning platform for modern infrastructure technologies.
-
+A self-hosted infrastructure project built on **Proxmox VE** with a focus on Linux system administration, virtualization, storage management, networking and containerized services. The project serves as a practical learning platform and controlled self-hosting environment for modern infrastructure technologies.
 ---
 
-## Objectives
+## Objectives 
 
-The homelab was designed to:
-
+The homelab was designed to: 
 * Build practical experience with Linux and Proxmox VE.
 * Deploy lightweight services using unprivileged LXC containers.
-* Centralize personal data and self-hosted applications.
-* Implement a maintainable storage and backup architecture.
-* Gain hands-on experience with Docker and PostgreSQL.
-* Replace third-party cloud services with self-hosted alternatives.
+* Structure persistent service data outside container filesystems.
+* Implement a maintainable storage and backup architecture. * Gain hands-on experience with Docker and PostgreSQL.
+* Explore self-hosted alternatives to third-party cloud services.
 
 ---
 
@@ -48,18 +43,19 @@ The homelab was designed to:
 
 ## Storage Architecture
 
+```md
 ```text
-                 Proxmox Host
-                      │
-        ┌─────────────┴─────────────┐
-        │                           │
-   Internal SSD                External Storage
-        │                           │
-   Proxmox + LXC                /mnt/data
-                                    │
-        ┌───────────────────────────┼──────────────────────────┐
-        │            │             │             │             │
-     Archive     Documents      Photos       Services      Music
+Proxmox Host
+     │
+     ┌─────────────┴─────────────┐
+     │                           │
+Internal SSD                External Storage
+     │                           │
+Proxmox + LXC              Host-managed storage
+                                 │
+     ┌───────────────────────────┼──────────────────────────┐
+     │            │             │             │             │
+  Shared        Media        Services      Backups       Archive
 ```
 
 Persistent application data is stored outside container filesystems using Proxmox bind mounts, simplifying backups, migrations and disaster recovery.
