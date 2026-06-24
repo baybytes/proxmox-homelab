@@ -73,16 +73,10 @@ Persistent storage is managed centrally by the Proxmox host.
 Rather than storing application data inside containers, bind mounts expose host directories to individual services.
 
 ```text
-Proxmox Host
-
-/mnt/data
-
-        │
-        ▼
-
-LXC Container
-
-/mnt/files
+Proxmox Host host-managed storage
+│
+▼
+LXC Container mounted service data
 ```
 
 This approach keeps storage independent from the lifecycle of individual containers.
@@ -116,19 +110,20 @@ Clients access centralized services through the local network using standard pro
 
 ---
 
+
 ## Data Organization
 
 The primary storage follows a simple hierarchical structure.
 
 ```text
-/mnt/data
+Host-managed storage
+├── Shared
+├── Media
+├── Services
+├── Backups
+└── Archive
 
-├── Archive
-├── Documents
-├── Music
-├── Other
-├── Photos
-└── Services
+User-facing data and application data remain logically separated while sharing the same underlying storage infrastructure.
 ```
 
 Personal data and application data remain logically separated while sharing the same underlying storage infrastructure.
@@ -181,11 +176,11 @@ These decisions reduce operational complexity and simplify recovery procedures.
 
 The current homelab successfully provides:
 
-* ✅ Proxmox VE virtualization
-* ✅ Centralized storage architecture
-* ✅ Network-wide DNS filtering
-* ✅ SMB file sharing
-* ✅ Self-hosted Joplin synchronization
-* ✅ Persistent bind-mounted application storage
+* Proxmox VE virtualization
+* Centralized storage architecture
+* Network-wide DNS filtering
+* SMB file sharing
+* Self-hosted Joplin synchronization
+* Persistent bind-mounted application storage
 
 The platform now serves as a stable foundation for future self-hosted infrastructure projects and continued learning in Linux systems administration and virtualization.
