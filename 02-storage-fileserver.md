@@ -14,7 +14,7 @@ The resulting design separates operating system components from persistent appli
 
 The storage architecture was designed with the following goals in mind:
 
-* Create a centralized location for all personal and service-related data.
+* Create a centralized location for user-facing and service-related data.
 * Replace legacy HFS+ storage with the Linux-native ext4 filesystem.
 * Perform the migration without data loss through staged verification.
 * Keep persistent application data independent from LXC root filesystems.
@@ -28,27 +28,9 @@ The storage architecture was designed with the following goals in mind:
 | Device              | Purpose                                        | Filesystem |
 | ------------------- | ---------------------------------------------- | ---------- |
 | Internal SSD        | Proxmox VE operating system and LXC root disks | ext4 / LVM |
-| 4 TB External HDD   | Primary production storage                     | ext4       |
-| 2 TB External HDD   | Backup and temporary migration storage         | ext4       |
-| 500 GB External HDD | Reserved for future backup purposes            | Planned    |
-
----
-
-## Storage Architecture
-
-```text
-                 Proxmox Host
-                      │
-        ┌─────────────┴─────────────┐
-        │                           │
-   Internal SSD                External Storage
-        │                           │
-   Proxmox + LXC                /mnt/data
-                                    │
-        ┌───────────────────────────┼──────────────────────────┐
-        │            │             │             │             │
-     Archive     Documents      Photos       Services      Music
-```
+| External HDD        | Primary production storage                     | ext4       |
+| External HDD        | Backup and temporary migration storage         | ext4       |
+| External HDD          Reserved for future backup purposes            | Planned    |
 
 
 ---
@@ -77,33 +59,26 @@ The migration was verified by comparing directory structures, storage usage and 
 ## Directory Structure
 
 ```text
-/mnt/data
-
-├── Archive
-├── Documents
-├── Music
-├── Other
-├── Photos
-└── Services
-```
+Host-managed storage
+├── Shared
+├── Media
+├── Services
+├── Backups
+└── Archive
 
 ---
 
 ## Integration with LXC Containers
 
+
 Persistent storage is mounted on the Proxmox host and exposed to containers through bind mounts.
 
-```text
+
 Host
+host-managed storage
 
-/mnt/data
-
-↓
-
-LXC Container
-
-/mnt/files
-```
+↓ LXC Container
+mounted service data
 
 This approach separates infrastructure from application data and simplifies future migrations.
 
@@ -118,6 +93,7 @@ The storage architecture was designed around a 3-2-1 backup philosophy.
 | Primary | Production storage |
 | Secondary | Dedicated backup drive |
 | Third | Offline / manual backup |
+
 
 ---
 
@@ -138,8 +114,8 @@ The storage migration has been completed successfully.
 
 Current environment:
 
-- ✅ ext4 production storage
-- ✅ centralized SMB access
-- ✅ bind-mounted LXC storage
-- ✅ backup storage available
-- ✅ prepared for future self-hosted services
+- ext4 production storage
+- centralized SMB access
+- bind-mounted LXC storage
+- backup storage available
+- prepared for future self-hosted services
