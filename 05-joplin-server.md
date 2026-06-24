@@ -4,7 +4,7 @@
 
 This document describes the deployment of a self-hosted Joplin Server running inside an unprivileged Debian LXC container on Proxmox VE.
 
-The objective was to replace third-party cloud synchronization with a private, self-hosted solution while maintaining synchronization across macOS, Windows and iOS devices.
+The objective was to evaluate a controlled self-hosted synchronization setup while maintaining cross-platform client support.
 
 ---
 
@@ -84,13 +84,13 @@ Persistent PostgreSQL data is stored inside the mounted storage directory rather
 
 ## Network
 
-The service is exposed on:
+The service is exposed only inside the local network:
 
 ```
-http://<server-ip>:22300
+http://<server-ip>:PORT
 ```
 
-Clients connect directly to the Joplin Server using their own user accounts.
+Clients connect directly to the Joplin Server using individual user accounts. No public endpoint, domain name or external IP address is documented in this repository.
 
 ---
 
@@ -120,11 +120,11 @@ The deployment separates administration from daily use.
 
 - Server administration only
 
-### Personal account
+### Standard account
 
 - Desktop synchronization
 - Mobile synchronization
-- Future Windows synchronization
+- Additional synchronization
 
 This approach follows the principle of least privilege.
 
